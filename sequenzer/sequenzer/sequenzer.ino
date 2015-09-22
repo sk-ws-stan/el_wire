@@ -3,18 +3,16 @@
 #include <EL_Escudo.h>
 
 
-Analyzer Audio = Analyzer(12,5,5);//Strobe pin ->4  RST pin ->5 Analog Pin ->5
+Analyzer Audio = Analyzer(11,12,5);//Strobe pin ->4  RST pin ->5 Analog Pin ->5
 //Analyzer Audio = Analyzer();//Strobe->4 RST->5 Analog->5
 int status;
 Queue m_queue[7];
 const unsigned int c_frequencyBands = 7U;
 const unsigned int c_normalizationSize = 60U;
-const unsigned int c_stepNormalization = 10U;
-
 
 void setup()
 {
-  Serial.begin( 57600 );  //Init the baudrate
+  Serial.begin( 9600 );  //Init the baudrate
   Audio.Init();//Init module 
   // The EL channels are on pins 2 through 9
   // Initialize the pins as outputs
@@ -64,14 +62,13 @@ void loop()
         unsigned int value = freqVal[ x ];
         m_queue[ x ].Push( value );
     }
-    free(freqVal);
+    unsigned int qsize = m_queue[ 0 ].GetSize();
 
-    unsigned int size = m_queue[ 0 ].GetSize();
-
-    if( size >= c_normalizationSize )
+    if( qsize >= c_normalizationSize )
     {
         digitalWrite( 10, status );
         status = !status;
+
         LightWires();
 
         for( unsigned int x = 0U; x < c_frequencyBands; x++ )
