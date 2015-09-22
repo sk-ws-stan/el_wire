@@ -1,16 +1,20 @@
+#include <Queue.h>
 #include <AudioAnalyzer.h>
 #include <EL_Escudo.h>
 
+
 Analyzer Audio = Analyzer(12,5,5);//Strobe pin ->4  RST pin ->5 Analog Pin ->5
 //Analyzer Audio = Analyzer();//Strobe->4 RST->5 Analog->5
-
-int FreqVal[7];
-int m_counter = 50;
+int status;
+Queue m_queue[7];
 const unsigned int c_frequencyBands = 7U;
+const unsigned int c_normalizationSize = 60U;
+const unsigned int c_stepNormalization = 10U;
+
 
 void setup()
 {
-  Serial.begin(57600);  //Init the baudrate
+  Serial.begin( 57600 );  //Init the baudrate
   Audio.Init();//Init module 
   // The EL channels are on pins 2 through 9
   // Initialize the pins as outputs
@@ -34,9 +38,11 @@ void LightWires()
     for( x = 0U; x < c_frequencyBands; x++ )
     {
         const unsigned int wire = x + 2U;// wires start from pin 2 - there was a mapping function once...
-        const unsigned int freq = max( ( FreqVal[ x ] - 100 ), 0 );
+        //const unsigned int freq = max( ( FreqVal[ x ] - 100U ), 0U );
+        const unsigned int mean =  m_queue[ x ].GetMean();
+        const unsigned int freq = max( ( mean - 100U ), 0U );
 
-        if( freq > 0 )
+        if( freq > 20 )
         {
             digitalWrite( wire, HIGH );
         }
@@ -49,10 +55,29 @@ void LightWires()
 
 void loop()
 {
-  Audio.ReadFreq(FreqVal);//return 7 value of 7 bands pass filiter 
+    int freqVal[7];
+    Audio.ReadFreq( freqVal );//return 7 value of 7 bands pass filiter
                           //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
                           //FreqVal[]:      0    1    2    3    4    5    6  
-  LightWires();
-  delay( 20 );
+    for( unsigned int x = 0U; x < c_frequencyBands; x++ )
+    {
+        unsigned int value = freqVal[ x ];
+        m_queue[ x ].Push( value );
+    }
+    free(freqVal);
+
+    unsigned int size = m_queue[ 0 ].GetSize();
+
+    if( size >= c_normalizationSize )
+    {
+        digitalWrite( 10, status );
+        status = !status;
+        LightWires();
+
+        for( unsigned int x = 0U; x < c_frequencyBands; x++ )
+        {
+            m_queue[ x ].Clear();
+        }
+    }
 }
 

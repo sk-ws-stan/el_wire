@@ -8,16 +8,20 @@ class Queue
   public:
     struct Node
     {
-        unsigned char value;
+        unsigned int value;
         struct Node* next;
     };
 
     Queue();
-    void Push( const unsigned char& element );
+    ~Queue();
+    void Push( const unsigned int element );
     void Pop();
-    const unsigned char GetMean();
+    void Clear();
+    const unsigned int GetMean() const;
+    const unsigned int GetSize() const;
 
   private:
+    unsigned int m_counter;
     struct Node* m_front;
     struct Node* m_rear;
 };

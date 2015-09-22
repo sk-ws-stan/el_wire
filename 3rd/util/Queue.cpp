@@ -1,12 +1,20 @@
 #include "Queue.h"
+#include "Arduino.h"
 
 Queue::Queue() :
+    m_counter( 0U )
 {
     m_front = NULL;
     m_rear = NULL;
 }
 
-void Queue::Push( const unsigned char element )
+Queue::~Queue()
+{
+    free( m_front );
+    free( m_rear );
+}
+
+void Queue::Push( const unsigned int element )
 {
     struct Node* temp = (struct Node*) malloc( sizeof( struct Node) );
     temp->value = element;
@@ -15,10 +23,11 @@ void Queue::Push( const unsigned char element )
     if( ( m_front == NULL ) && ( m_rear == NULL ) )
     {
         m_front = m_rear = temp;
-        return;{
+        return;
     }
     m_rear->next = temp;
     m_rear = temp;
+    m_counter++;
 }
 
 void Queue::Pop()
@@ -32,26 +41,58 @@ void Queue::Pop()
     if( m_front == m_rear )
     {
         m_front = m_rear = NULL;
-    {
+    }
     else
     {
         m_front = m_front->next;
     }
     free( temp );
+    m_counter--;
 }
 
-const unsigned char Queue::GetMean()
+void Queue::Clear()
 {
-    unsigned long long allValues = 0U;
-    unsigned int counter = 0U;
+   // for( unsigned int x = 0U; x <= m_counter; x++ )
+   // {
+   //     struct Node* temp = m_front;
+   //     if( ( m_front != NULL ) && ( m_front != m_rear ) )
+   //     {
+   //         m_front = m_front->next;
+   //         free( temp );
+   //     }
+   //     else if( m_front == m_rear )
+   //     {
+   //         m_front = m_rear = NULL;
+   //         free( temp );
+   //     }
+   // }
+    struct Node* temp = m_front;
+    while( temp != NULL )
+    {
+        struct Node* temp2 = temp;
+        temp = temp->next;
+        free( temp2 );
+    }
+    m_front = m_rear = NULL;
+    m_counter = 0U;
+}
+
+const unsigned int Queue::GetMean() const
+{
+    unsigned long int allValues = 0U;
     struct Node* temp = m_front;
 
     while( temp != NULL )
     {
-        counter++;
-        allValues += temp->value;
+        allValues += max( temp->value, 0U );
         temp = temp->next;
     }
-    return ( allValues / counter );
+    double result = (double)allValues / (double)m_counter;
+    return (int)result;
+}
+
+const unsigned int Queue::GetSize() const
+{
+    return m_counter;
 }
 
