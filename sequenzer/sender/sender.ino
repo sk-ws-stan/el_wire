@@ -34,6 +34,19 @@ const unsigned int c_boudRate = 57600U;
 // frequenzy bands used (<=7)
 const unsigned int c_frequencyBands = 7U;
 
+typedef struct
+{
+  int freq0;
+  int freq1;
+  int freq2;
+  int freq3;
+  int freq4;
+  int freq5;
+  int freq6;
+} Freqs;
+
+Freqs m_freqs;
+
 void setup()
 {
   //Set spectrum Shield pin configurations
@@ -85,14 +98,26 @@ void loop()
     {
         DebugPrintFrequencies();
     }
+    ArrayToFreqs();
     SendValues();
+}
+
+void ArrayToFreqs()
+{
+  m_freqs.freq0 = m_freqVal[0];
+  m_freqs.freq1 = m_freqVal[1];
+  m_freqs.freq2 = m_freqVal[2];
+  m_freqs.freq3 = m_freqVal[3];
+  m_freqs.freq4 = m_freqVal[4];
+  m_freqs.freq5 = m_freqVal[5];
+  m_freqs.freq6 = m_freqVal[6];
 }
 
 void SendValues()
 {
     radio.stopListening();
     // Take the time, and send it.  This will block until complete
-    bool ok = radio.write( m_freqVal, sizeof(m_freqVal) );
+    bool ok = radio.write( &m_freqs, sizeof(m_freqs) );
 
     if( ok )
     {

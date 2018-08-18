@@ -47,6 +47,19 @@ const unsigned int c_noiseGate = 100U;
 // divider for potentiometer read value
 const unsigned int c_potDevider = 1U;
 
+typedef struct
+{
+  int freq0;
+  int freq1;
+  int freq2;
+  int freq3;
+  int freq4;
+  int freq5;
+  int freq6;
+} Freqs;
+
+Freqs m_freqs;
+
 void setup()
 {
   // init the baudrate
@@ -112,6 +125,17 @@ void LightWires()
     }
 }
 
+void FreqsToArray()
+{
+  m_freqVal[0] = m_freqs.freq0;
+  m_freqVal[1] = m_freqs.freq1;
+  m_freqVal[2] = m_freqs.freq2;
+  m_freqVal[3] = m_freqs.freq3;
+  m_freqVal[4] = m_freqs.freq4;
+  m_freqVal[5] = m_freqs.freq5;
+  m_freqVal[6] = m_freqs.freq6;
+}
+
 void loop()
 {
     //return 7 values of 7 bands pass filter
@@ -120,6 +144,7 @@ void loop()
     delay(100);
     //read wifi here
     ReadRadio();
+    FreqsToArray();
     //devide pot value for coarser resolution / easier adjustment
     //disable this for now as it isn't connected
     //m_potValue = max( ( analogRead( c_potentionMeterInput ) / c_potDevider ), 0U );
@@ -142,8 +167,10 @@ void ReadRadio()
       while( !done )
       {
         // Fetch the payload, and see if this was the last one.
-        done = radio.read( &m_freqVal, sizeof(m_freqVal) );
+        done = radio.read( &m_freqs, sizeof(m_freqs) );
       }
+      radio.stopListening();
+
       if( c_radioDebug )
       {
         Serial.print( "==========" );
@@ -165,4 +192,5 @@ void ReadRadio()
         Serial.println();
       }
     }
+    radio.startListening();
 }
