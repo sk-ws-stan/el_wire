@@ -1,6 +1,10 @@
-#include <AudioAnalyzer.h>
-#include <EL_Escudo.h>
-
+// wifi uses SPI
+#include <SPI.h>
+#include <RF24.h>
+#include <RF24_config.h>
+#include <nRF24L01.h>
+//custom printf
+#include "printf.h"
 //Declare Spectrum Shield pin connections
 #define STROBE 4
 #define RESET 6
@@ -9,14 +13,38 @@
 
 //Define spectrum variables
 int freq_amp;
-int Frequencies_One[7];
-int Frequencies_Two[7]; 
+int Frequencies_One[ 7 ];
+int Frequencies_Two[ 7 ]; 
 int i;
 
-//Analyzer Audio = Analyzer( 11, 12, 5 );//Strobe pin ->4  RST pin ->5 Analog Pin ->5
-//Analyzer Audio = Analyzer();//Strobe->4 RST->5 Analog->5
+// Set up nRF24L01 radio on SPI bus plus pins 8 & 9
+RF24 radio( 9, 10 );
 
 
+//
+// Topology
+//
+
+// Radio pipe addresses for the 2 nodes to communicate.
+const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+
+//
+// Role management
+//
+// Set up role.  This sketch uses the same software for all the nodes
+// in this system.  Doing so greatly simplifies testing.  
+//
+
+// The various roles supported by this sketch
+typedef enum { role_ping_out = 1, role_pong_back } role_e;
+
+// The debug-friendly names of those roles
+const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
+
+// The role of the current running sketch
+role_e role = role_ping_out;
+
+//old stuff and modifiers
 // array to hold read audio levels
 int m_freqVal[7];
 // potentiometer output value [0,1023]
@@ -25,7 +53,8 @@ unsigned int m_potValue = 0U;
 const boolean m_potDebug = true;
 const boolean m_sequencerDebug = true;
 // serial boud rate: 9600 seems to work best
-const unsigned int c_boudRate = 9600U;
+//const unsigned int c_boudRate = 9600U;
+const unsigned int c_boudRate = 57600U;
 // frequenzy bands used (<=7)
 const unsigned int c_frequencyBands = 7U;
 // potentiometer analog read channel
@@ -37,9 +66,6 @@ const unsigned int c_potDevider = 1U;
 
 void setup()
 {
-  // init the baudrate
-  Serial.begin( c_boudRate );
-
   //Set spectrum Shield pin configurations
   pinMode( STROBE, OUTPUT );
   pinMode( RESET, OUTPUT );
@@ -59,14 +85,66 @@ void setup()
   delay( 1);
   digitalWrite( RESET, LOW );
 
-  // init audio analyzer  
-  //Audio.Init();
+  // init the baudrate
+  Serial.begin( c_boudRate );
+
+  printf_begin();
+  printf("\n\rRF24/examples/GettingStarted/\n\r");
+  printf("ROLE: %s\n\r",role_friendly_name[role]);
+  printf("*** PRESS 'T' to begin transmitting to the other node\n\r");
+
+  //
+  // Setup and configure rf radio
+  //
+
+  radio.begin();
+
+  // optionally, increase the delay between retries & # of retries
+  radio.setRetries(20,15);
+
+  // optionally, reduce the payload size.  seems to
+  // improve reliability
+  //radio.setPayloadSize(8);
+
+  //
+  // Open pipes to other nodes for communication
+  //
+
+  // This simple sketch opens two pipes for these two nodes to communicate
+  // back and forth.
+  // Open 'our' pipe for writing
+  // Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
+
+  if( role == role_ping_out )
+  {
+    radio.openWritingPipe(pipes[0]);
+    radio.openReadingPipe(1,pipes[1]);
+  }
+  else
+  {
+    radio.openWritingPipe(pipes[1]);
+    radio.openReadingPipe(1,pipes[0]);
+  }
+
+  //
+  // Start listening
+  //
+
+    // First, stop listening so we can talk.
+    radio.startListening();
+
+  //
+  // Dump the configuration of the rf unit for debugging
+  //
+
+  radio.printDetails();
 }
 
 void loop()
 {
   ReadFrequencies();
-  delay(50);
+
+  delay(100);
   
   //return 7 values of 7 bands pass filter
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
@@ -79,7 +157,23 @@ void loop()
     {
         DebugPrintFrequencies();
     }
-          
+    Serial.print( '++++ ' );
+    Serial.print( sizeof(m_freqVal) );
+    Serial.print( ' ++++' );
+    Serial.println();    
+
+    radio.stopListening();
+    // Take the time, and send it.  This will block until complete
+    bool ok = radio.write( &m_freqVal, sizeof(m_freqVal) );
+    
+    if (ok)
+      printf("=======================  ok...\n\r");
+    else
+      printf("failed=========================.\n\r");
+
+    radio.startListening();
+    
+    
     //debug output for potentiometer
     //if( m_potDebug )
     //{
@@ -104,17 +198,15 @@ void DebugPrintFrequencies()
 {
     for( i = 0; i < 7; i++ )
     {
-        int value = 0;
-        
         if( Frequencies_Two[ i ] > Frequencies_One[ i ] )
         {
-            value = Frequencies_Two[ i ];
+            m_freqVal[ i ] = Frequencies_Two[ i ];
         }
         else
         {
-            value = Frequencies_One[ i ];
+            m_freqVal[ i ] = Frequencies_One[ i ];
         }
-        Serial.print( value );
+        Serial.print( m_freqVal[ i ] );
         Serial.print( ' ' );
    }
    Serial.println();
