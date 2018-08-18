@@ -116,7 +116,7 @@ void loop()
     //return 7 values of 7 bands pass filter
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
     //FreqVal[]:    0    1    2    3    4    5    6
-
+    delay(20);
     //read wifi here
     ReadRadio();
     
