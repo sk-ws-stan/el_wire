@@ -61,7 +61,8 @@ void setup()
   // improve reliability
   //radio.setPayloadSize(8);
   // Open reading pipes
-  radio.openReadingPipe(1,pipes[0]);
+  radio.openWritingPipe( pipes[1] );
+  radio.openReadingPipe( 1, pipes[0] );
   // Start listening
   radio.startListening();
   // Dump the configuration of the rf unit for debugging
@@ -116,10 +117,9 @@ void loop()
     //return 7 values of 7 bands pass filter
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
     //FreqVal[]:    0    1    2    3    4    5    6
-    delay(20);
+    delay(100);
     //read wifi here
     ReadRadio();
-    
     //devide pot value for coarser resolution / easier adjustment
     //disable this for now as it isn't connected
     //m_potValue = max( ( analogRead( c_potentionMeterInput ) / c_potDevider ), 0U );
@@ -130,7 +130,6 @@ void loop()
         Serial.print( m_potValue );
         Serial.println();
     }
-
     LightWires();
 }
 

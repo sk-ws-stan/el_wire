@@ -114,15 +114,15 @@ void ReadFrequencies()
     Frequencies_Two[ freq_amp ] = analogRead( DC_Two ); 
     digitalWrite(STROBE, HIGH);
     digitalWrite(STROBE, LOW);
-  }
-  //for now take the higher channel
-  if( Frequencies_Two[ i ] > Frequencies_One[ i ] )
-  {
-      m_freqVal[ i ] = Frequencies_Two[ i ];
-  }
-  else
-  {
-      m_freqVal[ i ] = Frequencies_One[ i ];
+    //for now take the higher channel
+    if( Frequencies_Two[ freq_amp ] > Frequencies_One[ freq_amp ] )
+    {
+        m_freqVal[ freq_amp ] = Frequencies_Two[ freq_amp ];
+    }
+    else
+    {
+        m_freqVal[ freq_amp ] = Frequencies_One[ freq_amp ];
+    }
   }
 }
 
