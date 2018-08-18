@@ -157,10 +157,6 @@ void loop()
     {
         DebugPrintFrequencies();
     }
-    Serial.print( '++++ ' );
-    Serial.print( sizeof(m_freqVal) );
-    Serial.print( ' ++++' );
-    Serial.println();    
 
     radio.stopListening();
     // Take the time, and send it.  This will block until complete
