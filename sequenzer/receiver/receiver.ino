@@ -6,7 +6,7 @@
 
 #include <EL_Escudo.h>
 
-RF24 radio(9,10);
+RF24 radio( 9, 10 );
 
 //
 // Topology
@@ -14,18 +14,6 @@ RF24 radio(9,10);
 
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
-//
-// Role management
-//
-// Set up role.  This sketch uses the same software for all the nodes
-// in this system.  Doing so greatly simplifies testing.  
-//
-// The various roles supported by this sketch
-typedef enum { role_ping_out = 1, role_pong_back } role_e;
-// The debug-friendly names of those roles
-const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
-// The role of the current running sketch
-role_e role = role_pong_back;
 
 // array to hold read audio levels
 int m_freqVal[7];
@@ -141,14 +129,14 @@ void loop()
     //return 7 values of 7 bands pass filter
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
     //FreqVal[]:    0    1    2    3    4    5    6
-    delay(100);
+    delay(20);
     //read wifi here
     ReadRadio();
     FreqsToArray();
     //devide pot value for coarser resolution / easier adjustment
     //disable this for now as it isn't connected
     //m_potValue = max( ( analogRead( c_potentionMeterInput ) / c_potDevider ), 0U );
-    m_potValue = 100U;    
+    m_potValue = 250U;    
     //debug output for potentiometer
     if( c_potDebug )
     {
@@ -162,12 +150,14 @@ void ReadRadio()
 {
     if( radio.available() )
     {
+      //int test = -3;
       // Dump the payloads until we've gotten everything
       bool done = false;
       while( !done )
       {
         // Fetch the payload, and see if this was the last one.
         done = radio.read( &m_freqs, sizeof(m_freqs) );
+        //done = radio.read( &test, sizeof(test) );
       }
       radio.stopListening();
 
@@ -189,6 +179,7 @@ void ReadRadio()
         {
             Serial.print( m_freqVal[ x ] ); Serial.print( " " );
         }
+        //Serial.print( test );
         Serial.println();
       }
     }

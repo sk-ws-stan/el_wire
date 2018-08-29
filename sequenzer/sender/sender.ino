@@ -74,10 +74,10 @@ void setup()
   printf_begin();
   // Setup and configure rf radio
   radio.begin();
-  radio.setDataRate(RF24_250KBPS);
+  //radio.setDataRate(RF24_250KBPS);
   //radio.enableDynamicPayloads();
   // optionally, increase the delay between retries & # of retries
-  radio.setRetries(20,15);
+  //radio.setRetries(15,15);
 
   radio.openWritingPipe( pipes[0] );
   radio.openReadingPipe( 1, pipes[1] );
@@ -89,7 +89,7 @@ void setup()
 
 void loop()
 {
-    delay(100);  
+    delay(20);  
     //return 7 values of 7 bands pass filter
     ReadFrequencies();
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
@@ -99,6 +99,7 @@ void loop()
         DebugPrintFrequencies();
     }
     ArrayToFreqs();
+  //  DummyToFreqs();
     SendValues();
 }
 
@@ -113,14 +114,28 @@ void ArrayToFreqs()
   m_freqs.freq6 = m_freqVal[6];
 }
 
+void DummyToFreqs()
+{
+  m_freqs.freq0 = 256;
+  m_freqs.freq1 = 333;
+  m_freqs.freq2 = 444;
+  m_freqs.freq3 = 111;
+  m_freqs.freq4 = 666;
+  m_freqs.freq5 = 567;
+  m_freqs.freq6 = 321;
+}
+
 void SendValues()
 {
     radio.stopListening();
     // Take the time, and send it.  This will block until complete
+    int test = 123;
     bool ok = radio.write( &m_freqs, sizeof(m_freqs) );
+    //bool ok = radio.write( &test, sizeof(test) );
 
     if( ok )
     {
+      //Serial.print(test);
       printf("=======================  ok...\n\r");
     }
     else
