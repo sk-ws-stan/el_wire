@@ -76,8 +76,9 @@ void setup()
   radio.begin();
   //radio.setDataRate(RF24_250KBPS);
   //radio.enableDynamicPayloads();
+  radio.setAutoAck(false);
   // optionally, increase the delay between retries & # of retries
-  //radio.setRetries(15,15);
+  radio.setRetries(15,15);
 
   radio.openWritingPipe( pipes[0] );
   radio.openReadingPipe( 1, pipes[1] );
