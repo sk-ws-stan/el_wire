@@ -18,32 +18,33 @@
 #define RESET 6
 #define DC_One A0
 #define DC_Two A1 
-
-//Define spectrum variables
-int freq_amp;
-int Frequencies_One[ 7 ];
-int Frequencies_Two[ 7 ]; 
-int i;
+//button
+#define BUTTON 2
 
 // Set up nRF24L01 radio on SPI bus plus pins 8 & 9
 RF24 radio( 9, 10 );
 // Topology
-//
+const boolean c_autoAck = false;
 // Radio pipe addresses for the 2 nodes to communicate.
-const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+const uint64_t c_pipes[ 2 ] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 
 //LCD Display
-LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7);
+LiquidCrystal_I2C lcd( 0x27, 2, 1, 0, 4, 5, 6, 7 );
 
-// array to hold read audio levels
-int m_freqVal[7];
 // debug flags
-const boolean m_potDebug = true;
-const boolean m_sequencerDebug = true;
+const boolean c_potDebug = false;
+const boolean c_sequencerDebug = false;
+const boolean c_debugRadio = false;
 // serial boud rate: 57600 seems to work best
 const unsigned int c_boudRate = 57600U;
 // frequenzy bands used (<=7)
 const unsigned int c_frequencyBands = 7U;
+//Define spectrum variables
+//int freq_amp;
+int Frequencies_One[ c_frequencyBands ];
+int Frequencies_Two[ c_frequencyBands ];
+//int i;
+int m_freqVal[ c_frequencyBands ];
 
 typedef struct
 {
@@ -87,20 +88,20 @@ void setup()
   radio.begin();
   //radio.setDataRate(RF24_250KBPS);
   //radio.enableDynamicPayloads();
-  radio.setAutoAck(false);
+  radio.setAutoAck( c_autoAck );
   // optionally, increase the delay between retries & # of retries
-  radio.setRetries(15,15);
+  radio.setRetries( 15,15 );
 
-  radio.openWritingPipe( pipes[0] );
-  radio.openReadingPipe( 1, pipes[1] );
+  radio.openWritingPipe( c_pipes[0] );
+  radio.openReadingPipe( 1, c_pipes[1] );
   // Start listening
   radio.startListening();
   // Dump the configuration of the rf unit for debugging
   radio.printDetails();
-
-  lcd.setBacklightPin(3,POSITIVE);
-  lcd.setBacklight(HIGH); // NOTE: You can turn the backlight off by setting it to LOW instead of HIGH
-  lcd.begin(16, 2);
+  
+  lcd.setBacklightPin( 3, POSITIVE );
+  lcd.setBacklight( LOW ); // NOTE: You can turn the backlight off by setting it to LOW instead of HIGH
+  lcd.begin( 16, 2 );
   lcd.clear();
 }
 
@@ -111,75 +112,78 @@ void loop()
     ReadFrequencies();
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
     //FreqVal[]:    0    1    2    3    4    5    6
-    if( m_sequencerDebug )
+    if( c_sequencerDebug )
     {
         DebugPrintFrequencies();
     }
     ArrayToFreqs();
     PrintFreqOnLCD();
-  //  DummyToFreqs();
+
+    //DummyToFreqs();
     SendValues();
 }
 
 
 void PrintFreqOnLCD()
 {
-  lcd.setCursor(0,0);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq0);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq1);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq2);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq3);
-  lcd.setCursor(0,1);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq4);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq5);
-  lcd.print(' ');
-  lcd.print(m_freqs.freq6);
+  lcd.setCursor( 0, 0 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq0 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq1 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq2 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq3 );
+  lcd.setCursor( 0, 1 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq4 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq5 );
+  lcd.print( ' ' );
+  lcd.print( m_freqs.freq6 );
+}
+
 }
 
 void ArrayToFreqs()
 {
-  m_freqs.freq0 = m_freqVal[0];
-  m_freqs.freq1 = m_freqVal[1];
-  m_freqs.freq2 = m_freqVal[2];
-  m_freqs.freq3 = m_freqVal[3];
-  m_freqs.freq4 = m_freqVal[4];
-  m_freqs.freq5 = m_freqVal[5];
-  m_freqs.freq6 = m_freqVal[6];
+  m_freqs.freq0 = m_freqVal[ 0 ];
+  m_freqs.freq1 = m_freqVal[ 1 ];
+  m_freqs.freq2 = m_freqVal[ 2 ];
+  m_freqs.freq3 = m_freqVal[ 3 ];
+  m_freqs.freq4 = m_freqVal[ 4 ];
+  m_freqs.freq5 = m_freqVal[ 5 ];
+  m_freqs.freq6 = m_freqVal[ 6 ];
 }
 
-void DummyToFreqs()
-{
-  m_freqs.freq0 = 256;
-  m_freqs.freq1 = 333;
-  m_freqs.freq2 = 444;
-  m_freqs.freq3 = 111;
-  m_freqs.freq4 = 666;
-  m_freqs.freq5 = 567;
-  m_freqs.freq6 = 321;
-}
+//void DummyToFreqs()
+//{
+//  m_freqs.freq0 = 256;
+//  m_freqs.freq1 = 333;
+//  m_freqs.freq2 = 444;
+//  m_freqs.freq3 = 111;
+//  m_freqs.freq4 = 666;
+//  m_freqs.freq5 = 567;
+//  m_freqs.freq6 = 321;
+//}
 
 void SendValues()
 {
     radio.stopListening();
     // Take the time, and send it.  This will block until complete
-    int test = 123;
-    bool ok = radio.write( &m_freqs, sizeof(m_freqs) );
-    //bool ok = radio.write( &test, sizeof(test) );
+    bool ok = radio.write( &m_freqs, sizeof( m_freqs ) );
 
-    if( ok )
+    if( c_debugRadio )
     {
-      //Serial.print(test);
-      printf("=======================  ok...\n\r");
-    }
-    else
-    {
-      printf("failed=========================.\n\r");
+        if( ok )
+        {
+            printf("=======================  ok...\n\r");
+        }
+        else
+        {
+            printf("failed=========================.\n\r");
+        }
     }
     radio.startListening();
 }
@@ -187,27 +191,28 @@ void SendValues()
 void ReadFrequencies()
 {
   //Read frequencies for each band
-  for( freq_amp = 0; freq_amp < c_frequencyBands; freq_amp++ )
+  for( int i = 0; i < c_frequencyBands; i++ )
   {
-    Frequencies_One[ freq_amp ] = analogRead( DC_One );
-    Frequencies_Two[ freq_amp ] = analogRead( DC_Two ); 
-    digitalWrite(STROBE, HIGH);
-    digitalWrite(STROBE, LOW);
+    Frequencies_One[ i ] = analogRead( DC_One );
+    Frequencies_Two[ i ] = analogRead( DC_Two ); 
+    digitalWrite( STROBE, HIGH );
+    digitalWrite( STROBE, LOW );
+    
     //for now take the higher channel
-    if( Frequencies_Two[ freq_amp ] > Frequencies_One[ freq_amp ] )
+    if( Frequencies_Two[ i ] > Frequencies_One[ i ] )
     {
-        m_freqVal[ freq_amp ] = Frequencies_Two[ freq_amp ];
+        m_freqVal[ i ] = Frequencies_Two[ i ];
     }
     else
     {
-        m_freqVal[ freq_amp ] = Frequencies_One[ freq_amp ];
+        m_freqVal[ i ] = Frequencies_One[ i ];
     }
   }
 }
 
 void DebugPrintFrequencies()
 {
-    for( i = 0; i < 7; i++ )
+    for( int i = 0; i < c_frequencyBands; i++ )
     {
         Serial.print( m_freqVal[ i ] );
         Serial.print( ' ' );
