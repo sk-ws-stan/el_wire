@@ -45,6 +45,9 @@ int Frequencies_One[ c_frequencyBands ];
 int Frequencies_Two[ c_frequencyBands ];
 //int i;
 int m_freqVal[ c_frequencyBands ];
+// filtering
+const boolean c_filtering = true;
+const unsigned int c_sampleShift = 1U;
 
 typedef struct
 {
@@ -58,6 +61,7 @@ typedef struct
 } Freqs;
 
 Freqs m_freqs;
+Freqs smoothed;
 
 void setup()
 {
@@ -116,8 +120,14 @@ void loop()
     {
         DebugPrintFrequencies();
     }
-    ArrayToFreqs();
-    PrintFreqOnLCD();
+    if( c_filtering )
+    {
+        ExponentialAverageFreq();
+    }
+    else
+    {
+        ArrayToFreqs();
+    }
 
     //DummyToFreqs();
     SendValues();
@@ -144,6 +154,22 @@ void PrintFreqOnLCD()
   lcd.print( m_freqs.freq6 );
 }
 
+void ExponentialAverageFreq()
+{
+  smoothed.freq0 = smoothed.freq0 - m_freqs.freq0 + m_freqVal[ 0 ];
+  m_freqs.freq0 = smoothed.freq0 >> c_sampleShift;
+  smoothed.freq1 = smoothed.freq1 - m_freqs.freq1 + m_freqVal[ 1 ];
+  m_freqs.freq1 = smoothed.freq1 >> c_sampleShift;
+  smoothed.freq2 = smoothed.freq2 - m_freqs.freq2 + m_freqVal[ 2 ];
+  m_freqs.freq2 = smoothed.freq2 >> c_sampleShift;
+  smoothed.freq3 = smoothed.freq3 - m_freqs.freq3 + m_freqVal[ 3 ];
+  m_freqs.freq3 = smoothed.freq3 >> c_sampleShift;
+  smoothed.freq4 = smoothed.freq4 - m_freqs.freq4 + m_freqVal[ 4 ];
+  m_freqs.freq4 = smoothed.freq4 >> c_sampleShift;
+  smoothed.freq5 = smoothed.freq5 - m_freqs.freq5 + m_freqVal[ 5 ];
+  m_freqs.freq5 = smoothed.freq5 >> c_sampleShift;
+  smoothed.freq6 = smoothed.freq6 - m_freqs.freq6 + m_freqVal[ 6 ];
+  m_freqs.freq6 = smoothed.freq6 >> c_sampleShift;
 }
 
 void ArrayToFreqs()
