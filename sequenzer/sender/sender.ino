@@ -70,6 +70,7 @@ void setup()
   pinMode( RESET, OUTPUT );
   pinMode( DC_One, INPUT );
   pinMode( DC_Two, INPUT );
+  pinMode( BUTTON, INPUT );
   digitalWrite( STROBE, HIGH );
   digitalWrite( RESET, HIGH );
   
@@ -129,10 +130,23 @@ void loop()
         ArrayToFreqs();
     }
 
+    if( ButtonPressed() )
+    {
+        lcd.setBacklight( HIGH );
+        PrintFreqOnLCD();
+    }
+    else
+    {
+        lcd.setBacklight( LOW );
+    }
     //DummyToFreqs();
     SendValues();
 }
 
+boolean ButtonPressed()
+{
+    return( digitalRead( BUTTON ) == HIGH );
+}
 
 void PrintFreqOnLCD()
 {
