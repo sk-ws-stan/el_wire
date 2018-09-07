@@ -71,13 +71,13 @@ void setup()
   
   //Initialize Spectrum Analyzers
   digitalWrite( STROBE, LOW );
-  delay( 1);
+  delay( 1 );
   digitalWrite( RESET, HIGH );
-  delay( 1);
+  delay( 1 );
   digitalWrite( STROBE, HIGH );
-  delay( 1);
+  delay( 1 );
   digitalWrite( STROBE, LOW );
-  delay( 1);
+  delay( 1 );
   digitalWrite( RESET, LOW );
 
   // init the baudrate
