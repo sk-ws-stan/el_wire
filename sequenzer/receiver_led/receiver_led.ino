@@ -11,11 +11,18 @@
 #include <nRF24L01.h>
 #include "printf.h"
 
-#define NUM_LEDS 106
-#define DATA_PIN 3
+#define NUM_LEDS_1 106
+#define NUM_LEDS_2 88
+#define DATA_PIN_1 3
+#define DATA_PIN_2 4
 #define CLOCK_PIN 2
+#define NUM_STRIPS 2
 
-CRGB leds[NUM_LEDS];
+CRGB leds_one[ NUM_LEDS_1 ];
+CRGB leds_two[ NUM_LEDS_2 ];
+CLEDController *controllers[ NUM_STRIPS ];
+uint8_t gBrightness = 128;
+
 RF24 radio( 9, 10 );
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
@@ -31,7 +38,8 @@ const unsigned int c_potentionMeterInput = 3U;
 const unsigned int c_noiseGate = 100U;
 // divider for potentiometer read value
 const unsigned int c_potDevider = 1U;
-int currentLed = 0;
+int currentLed_one = 0;
+int currentLed_two = 0;
 
 typedef struct
 {
@@ -51,7 +59,10 @@ void setup()
 {
   // sanity check delay - allows reprogramming if accidently blowing power w/leds
   delay(2000);
-  FastLED.addLeds< APA102, DATA_PIN, CLOCK_PIN, RGB >( leds, NUM_LEDS );
+  controllers[0] = &FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
+  controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
+//    FastLED.addLeds< APA102, CLOCK_PIN, DATA_PIN_1, RGB >( leds_one, NUM_LEDS_1 );
+  //    FastLED.addLeds< APA102, CLOCK_PIN, DATA_PIN_2, RGB >( leds_one, NUM_LEDS_1 );
   // init the baudrate
   Serial.begin( c_boudRate );
 
@@ -84,11 +95,19 @@ void FreqsToArray()
   m_freqVal[6] = m_freqs.freq6;
 }
 
-void fadeall()
+void fadeall_one()
 {
-  for( int i = 0; i < NUM_LEDS; i++ )
+  for( int i = 0; i < NUM_LEDS_1; i++ )
   {
-    leds[i].nscale8(250);
+    leds_one[i].nscale8(250);
+  }
+}
+
+void fadeall_two()
+{
+  for( int i = 0; i < NUM_LEDS_2; i++ )
+  {
+    leds_two[i].nscale8(250);
   }
 }
 
@@ -151,19 +170,31 @@ void loop()
 
  // for( int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed = whiteLed + 1 )
   //{
-    leds[ ++currentLed ] = CHSV( hue++, 255, 255 );
+    leds_one[ ++currentLed_one ] = CHSV( hue++, 255, 255 );
+    leds_two[ ++currentLed_two ] = CHSV( hue++, 255, 255 );
 
-    FastLED.show();
-
+    //FastLED.show();
+    controllers[0]->showLeds(gBrightness);
+    controllers[1]->showLeds(gBrightness);
+    
+    if( hue >= 255 )
+    {
+      hue = 0;
+    }
     //currentLed;
     
-    if( currentLed >= NUM_LEDS )
+    if( currentLed_one >= NUM_LEDS_1 )
     {
-      currentLed = 0;
+      currentLed_one = 0;
+    }
+    if( currentLed_two >= NUM_LEDS_2 )
+    {
+      currentLed_two = 0;
     }
     
     delay(10);
       
-    fadeall();
+    fadeall_one();
+    fadeall_two();
   //}
 }
