@@ -12,14 +12,17 @@
 #include "printf.h"
 
 #define NUM_LEDS_1 106
-#define NUM_LEDS_2 88
+#define NUM_LEDS_2 106
+#define NUM_LEDS_3 106
 #define DATA_PIN_1 3
 #define DATA_PIN_2 4
+#define DATA_PIN_3 5
 #define CLOCK_PIN 2
-#define NUM_STRIPS 2
+#define NUM_STRIPS 3
 
 CRGB leds_one[ NUM_LEDS_1 ];
 CRGB leds_two[ NUM_LEDS_2 ];
+CRGB leds_three[ NUM_LEDS_3 ];
 CLEDController *controllers[ NUM_STRIPS ];
 uint8_t gBrightness = 128;
 
@@ -40,6 +43,7 @@ const unsigned int c_noiseGate = 100U;
 const unsigned int c_potDevider = 1U;
 int currentLed_one = 0;
 int currentLed_two = 0;
+int currentLed_three = 0;
 
 typedef struct
 {
@@ -61,8 +65,9 @@ void setup()
   delay(2000);
   controllers[0] = &FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
   controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
-//    FastLED.addLeds< APA102, CLOCK_PIN, DATA_PIN_1, RGB >( leds_one, NUM_LEDS_1 );
-  //    FastLED.addLeds< APA102, CLOCK_PIN, DATA_PIN_2, RGB >( leds_one, NUM_LEDS_1 );
+  controllers[2] = &FastLED.addLeds< APA102, DATA_PIN_3, CLOCK_PIN, RGB >( leds_three, NUM_LEDS_3 );
+  //FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
+  //FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
   // init the baudrate
   Serial.begin( c_boudRate );
 
@@ -84,6 +89,7 @@ void setup()
   // Dump the configuration of the rf unit for debugging
   radio.printDetails();
 }
+
 void FreqsToArray()
 {
   m_freqVal[0] = m_freqs.freq0;
@@ -108,6 +114,14 @@ void fadeall_two()
   for( int i = 0; i < NUM_LEDS_2; i++ )
   {
     leds_two[i].nscale8(250);
+  }
+}
+
+void fadeall_three()
+{
+  for( int i = 0; i < NUM_LEDS_3; i++ )
+  {
+    leds_three[i].nscale8(250);
   }
 }
 
@@ -166,20 +180,32 @@ void loop()
     ReadRadio();
     FreqsToArray();
 
-  static uint8_t hue = 0;
+  static uint8_t hue_one = 0;
+  static uint8_t hue_two = 128;
+  static uint8_t hue_three = 255;
 
  // for( int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed = whiteLed + 1 )
   //{
-    leds_one[ ++currentLed_one ] = CHSV( hue++, 255, 255 );
-    leds_two[ ++currentLed_two ] = CHSV( hue++, 255, 255 );
+    leds_one[ currentLed_one++ ] = CHSV( hue_one++, 255, 255 );
+    leds_two[ currentLed_two++ ] = CHSV( hue_two++, 255, 255 );
+    leds_three[ currentLed_three++ ] = CHSV( hue_three++, 255, 255 );
 
-    //FastLED.show();
+   // FastLED.show();
     controllers[0]->showLeds(gBrightness);
     controllers[1]->showLeds(gBrightness);
+    controllers[2]->showLeds(gBrightness);
     
-    if( hue >= 255 )
+    if( hue_one >= 255 )
     {
-      hue = 0;
+      hue_one = 0;
+    }
+    if( hue_two >= 255 )
+    {
+      hue_two = 0;
+    }
+    if( hue_three >= 255 )
+    {
+      hue_three = 0;
     }
     //currentLed;
     
@@ -191,10 +217,15 @@ void loop()
     {
       currentLed_two = 0;
     }
+    if( currentLed_three >= NUM_LEDS_3 )
+    {
+      currentLed_three = 0;
+    }
     
     delay(10);
       
     fadeall_one();
     fadeall_two();
+    fadeall_three();
   //}
 }
