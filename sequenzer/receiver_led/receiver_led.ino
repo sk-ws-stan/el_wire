@@ -14,15 +14,18 @@
 #define NUM_LEDS_1 106
 #define NUM_LEDS_2 106
 #define NUM_LEDS_3 106
+#define NUM_LEDS_4 106
 #define DATA_PIN_1 3
 #define DATA_PIN_2 4
 #define DATA_PIN_3 5
+#define DATA_PIN_4 6
 #define CLOCK_PIN 2
-#define NUM_STRIPS 3
+#define NUM_STRIPS 4
 
 CRGB leds_one[ NUM_LEDS_1 ];
 CRGB leds_two[ NUM_LEDS_2 ];
 CRGB leds_three[ NUM_LEDS_3 ];
+CRGB leds_four[ NUM_LEDS_4 ];
 CLEDController *controllers[ NUM_STRIPS ];
 uint8_t gBrightness = 128;
 
@@ -44,6 +47,7 @@ const unsigned int c_potDevider = 1U;
 int currentLed_one = 0;
 int currentLed_two = 0;
 int currentLed_three = 0;
+int currentLed_four = 0;
 
 typedef struct
 {
@@ -66,6 +70,7 @@ void setup()
   controllers[0] = &FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
   controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
   controllers[2] = &FastLED.addLeds< APA102, DATA_PIN_3, CLOCK_PIN, RGB >( leds_three, NUM_LEDS_3 );
+  controllers[3] = &FastLED.addLeds< APA102, DATA_PIN_4, CLOCK_PIN, RGB >( leds_four, NUM_LEDS_4 );
   //FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
   //FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
   // init the baudrate
@@ -125,6 +130,13 @@ void fadeall_three()
   }
 }
 
+void fadeall_four()
+{
+  for( int i = 0; i < NUM_LEDS_4; i++ )
+  {
+    leds_four[i].nscale8(250);
+  }
+}
 void ReadRadio()
 {
     if( radio.available() )
@@ -181,19 +193,26 @@ void loop()
     FreqsToArray();
 
   static uint8_t hue_one = 0;
-  static uint8_t hue_two = 128;
-  static uint8_t hue_three = 255;
+  static uint8_t hue_two = 64;
+  static uint8_t hue_three = 128;
+  static uint8_t hue_four = 192;
 
  // for( int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed = whiteLed + 1 )
   //{
-    leds_one[ currentLed_one++ ] = CHSV( hue_one++, 255, 255 );
-    leds_two[ currentLed_two++ ] = CHSV( hue_two++, 255, 255 );
-    leds_three[ currentLed_three++ ] = CHSV( hue_three++, 255, 255 );
+//    leds_one[ currentLed_one++ ] = CHSV( hue_one++, 255, 255 );
+//    leds_two[ currentLed_two++ ] = CHSV( hue_two++, 255, 255 );
+//    leds_three[ currentLed_three++ ] = CHSV( hue_three++, 255, 255 );
+//    leds_four[ currentLed_four++ ] = CHSV( hue_four++, 255, 255 );
+    leds_one[ currentLed_one++ ] = CRGB::White;
+    leds_two[ currentLed_two++ ] = CRGB::White;
+    leds_three[ currentLed_three++ ] = CRGB::White;
+    leds_four[ currentLed_four++ ] = CRGB::White;
 
    // FastLED.show();
     controllers[0]->showLeds(gBrightness);
     controllers[1]->showLeds(gBrightness);
     controllers[2]->showLeds(gBrightness);
+    controllers[3]->showLeds(gBrightness);
     
     if( hue_one >= 255 )
     {
@@ -206,6 +225,10 @@ void loop()
     if( hue_three >= 255 )
     {
       hue_three = 0;
+    }
+    if( hue_four >= 255 )
+    {
+      hue_four = 0;
     }
     //currentLed;
     
@@ -221,11 +244,16 @@ void loop()
     {
       currentLed_three = 0;
     }
+    if( currentLed_four >= NUM_LEDS_4 )
+    {
+      currentLed_four = 0;
+    }
     
     delay(10);
       
-    fadeall_one();
-    fadeall_two();
-    fadeall_three();
+//    fadeall_one();
+//    fadeall_two();
+//    fadeall_three();
+//    fadeall_four();
   //}
 }
