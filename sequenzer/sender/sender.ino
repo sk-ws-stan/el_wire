@@ -60,8 +60,9 @@ typedef struct
   int freq6;
 } Freqs;
 
-Freqs m_freqs;
-Freqs smoothed;
+Freqs m_freqsSend;
+Freqs m_freqsSmoothed;
+Freqs m_freqsCache;
 
 void setup()
 {
@@ -121,17 +122,17 @@ void loop()
     {
         DebugPrintFrequencies();
     }
-    if( c_filtering )
-    {
-        ExponentialAverageFreq();
-    }
-    else
-    {
-        ArrayToFreqs();
-    }
+    ArrayToFreqs();
+    //DummyToFreqs();
+    SendValues();
 
     if( ButtonPressed() )
     {
+        //for now this for the display only as it introduces too much latency
+        if( c_filtering )
+        {
+            ExponentialAverageFreq();
+        }
         lcd.setBacklight( HIGH );
         PrintFreqOnLCD();
     }
@@ -139,8 +140,6 @@ void loop()
     {
         lcd.setBacklight( LOW );
     }
-    //DummyToFreqs();
-    SendValues();
 }
 
 boolean ButtonPressed()
@@ -170,20 +169,20 @@ void PrintFreqOnLCD()
 
 void ExponentialAverageFreq()
 {
-  smoothed.freq0 = smoothed.freq0 - m_freqs.freq0 + m_freqVal[ 0 ];
-  m_freqs.freq0 = smoothed.freq0 >> c_sampleShift;
-  smoothed.freq1 = smoothed.freq1 - m_freqs.freq1 + m_freqVal[ 1 ];
-  m_freqs.freq1 = smoothed.freq1 >> c_sampleShift;
-  smoothed.freq2 = smoothed.freq2 - m_freqs.freq2 + m_freqVal[ 2 ];
-  m_freqs.freq2 = smoothed.freq2 >> c_sampleShift;
-  smoothed.freq3 = smoothed.freq3 - m_freqs.freq3 + m_freqVal[ 3 ];
-  m_freqs.freq3 = smoothed.freq3 >> c_sampleShift;
-  smoothed.freq4 = smoothed.freq4 - m_freqs.freq4 + m_freqVal[ 4 ];
-  m_freqs.freq4 = smoothed.freq4 >> c_sampleShift;
-  smoothed.freq5 = smoothed.freq5 - m_freqs.freq5 + m_freqVal[ 5 ];
-  m_freqs.freq5 = smoothed.freq5 >> c_sampleShift;
-  smoothed.freq6 = smoothed.freq6 - m_freqs.freq6 + m_freqVal[ 6 ];
-  m_freqs.freq6 = smoothed.freq6 >> c_sampleShift;
+  m_freqsSmoothed.freq0 = m_freqsSmoothed.freq0 - m_freqsCache.freq0 + m_freqVal[ 0 ];
+  m_freqsCache.freq0 = m_freqsSmoothed.freq0 >> c_sampleShift;
+  m_freqsSmoothed.freq1 = m_freqsSmoothed.freq1 - m_freqsCache.freq1 + m_freqVal[ 1 ];
+  m_freqsCache.freq1 = m_freqsSmoothed.freq1 >> c_sampleShift;
+  m_freqsSmoothed.freq2 = m_freqsSmoothed.freq2 - m_freqsCache.freq2 + m_freqVal[ 2 ];
+  m_freqsCache.freq2 = m_freqsSmoothed.freq2 >> c_sampleShift;
+  m_freqsSmoothed.freq3 = m_freqsSmoothed.freq3 - m_freqsCache.freq3 + m_freqVal[ 3 ];
+  m_freqsCache.freq3 = m_freqsSmoothed.freq3 >> c_sampleShift;
+  m_freqsSmoothed.freq4 = m_freqsSmoothed.freq4 - m_freqsCache.freq4 + m_freqVal[ 4 ];
+  m_freqsCache.freq4 = m_freqsSmoothed.freq4 >> c_sampleShift;
+  m_freqsSmoothed.freq5 = m_freqsSmoothed.freq5 - m_freqsCache.freq5 + m_freqVal[ 5 ];
+  m_freqsCache.freq5 = m_freqsSmoothed.freq5 >> c_sampleShift;
+  m_freqsSmoothed.freq6 = m_freqsSmoothed.freq6 - m_freqsCache.freq6 + m_freqVal[ 6 ];
+  m_freqsCache.freq6 = m_freqsSmoothed.freq6 >> c_sampleShift;
 }
 
 void ArrayToFreqs()
