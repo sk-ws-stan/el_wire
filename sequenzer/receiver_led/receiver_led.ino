@@ -33,17 +33,13 @@ RF24 radio( 9, 10 );
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 
-// array to hold read audio levels
-int m_freqVal[7];
 const boolean c_radioDebug = true;
 const unsigned int c_boudRate = 57600U;
 // frequenzy bands used (<=7)
 const unsigned int c_frequencyBands = 7U;
-const unsigned int c_potentionMeterInput = 3U;
 // noise gate value for frequency levels
 const unsigned int c_noiseGate = 100U;
 // divider for potentiometer read value
-const unsigned int c_potDevider = 1U;
 int currentLed_one = 0;
 int currentLed_two = 0;
 int currentLed_three = 0;
@@ -71,8 +67,6 @@ void setup()
   controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
   controllers[2] = &FastLED.addLeds< APA102, DATA_PIN_3, CLOCK_PIN, RGB >( leds_three, NUM_LEDS_3 );
   controllers[3] = &FastLED.addLeds< APA102, DATA_PIN_4, CLOCK_PIN, RGB >( leds_four, NUM_LEDS_4 );
-  //FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
-  //FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
   // init the baudrate
   Serial.begin( c_boudRate );
 
@@ -93,17 +87,6 @@ void setup()
   radio.startListening();
   // Dump the configuration of the rf unit for debugging
   radio.printDetails();
-}
-
-void FreqsToArray()
-{
-  m_freqVal[0] = m_freqs.freq0;
-  m_freqVal[1] = m_freqs.freq1;
-  m_freqVal[2] = m_freqs.freq2;
-  m_freqVal[3] = m_freqs.freq3;
-  m_freqVal[4] = m_freqs.freq4;
-  m_freqVal[5] = m_freqs.freq5;
-  m_freqVal[6] = m_freqs.freq6;
 }
 
 void fadeall_one()
@@ -166,10 +149,14 @@ void ReadRadio()
         Serial.print( "==========" );
         Serial.println();
 
-        for( unsigned int x = 0U; x < c_frequencyBands; x++ )
-        {
-            Serial.print( m_freqVal[ x ] ); Serial.print( " " );
-        }
+        Serial.print( m_freqs.freq0 ); Serial.print( " " );
+        Serial.print( m_freqs.freq1 ); Serial.print( " " );
+        Serial.print( m_freqs.freq2 ); Serial.print( " " );
+        Serial.print( m_freqs.freq3 ); Serial.print( " " );
+        Serial.print( m_freqs.freq4 ); Serial.print( " " );
+        Serial.print( m_freqs.freq5 ); Serial.print( " " );
+        Serial.print( m_freqs.freq6 ); Serial.print( " " );
+
         //Serial.print( test );
         Serial.println();
       }
@@ -190,7 +177,6 @@ void loop()
     //delay(20);
     //read wifi here
     ReadRadio();
-    FreqsToArray();
 
   static uint8_t hue_one = 0;
   static uint8_t hue_two = 64;
