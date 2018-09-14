@@ -113,7 +113,7 @@ void setup()
 
 void loop()
 {
-    delay(20);  
+    delay(10);  
     //return 7 values of 7 bands pass filter
     ReadFrequencies();
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
@@ -151,20 +151,20 @@ void PrintFreqOnLCD()
 {
   lcd.setCursor( 0, 0 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq0 );
+  lcd.print( m_freqsSmoothed.freq0 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq1 );
+  lcd.print( m_freqsSmoothed.freq1 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq2 );
+  lcd.print( m_freqsSmoothed.freq2 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq3 );
+  lcd.print( m_freqsSmoothed.freq3 );
   lcd.setCursor( 0, 1 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq4 );
+  lcd.print( m_freqsSmoothed.freq4 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq5 );
+  lcd.print( m_freqsSmoothed.freq5 );
   lcd.print( ' ' );
-  lcd.print( m_freqs.freq6 );
+  lcd.print( m_freqsSmoothed.freq6 );
 }
 
 void ExponentialAverageFreq()
@@ -187,31 +187,31 @@ void ExponentialAverageFreq()
 
 void ArrayToFreqs()
 {
-  m_freqs.freq0 = m_freqVal[ 0 ];
-  m_freqs.freq1 = m_freqVal[ 1 ];
-  m_freqs.freq2 = m_freqVal[ 2 ];
-  m_freqs.freq3 = m_freqVal[ 3 ];
-  m_freqs.freq4 = m_freqVal[ 4 ];
-  m_freqs.freq5 = m_freqVal[ 5 ];
-  m_freqs.freq6 = m_freqVal[ 6 ];
+  m_freqsSend.freq0 = m_freqVal[ 0 ];
+  m_freqsSend.freq1 = m_freqVal[ 1 ];
+  m_freqsSend.freq2 = m_freqVal[ 2 ];
+  m_freqsSend.freq3 = m_freqVal[ 3 ];
+  m_freqsSend.freq4 = m_freqVal[ 4 ];
+  m_freqsSend.freq5 = m_freqVal[ 5 ];
+  m_freqsSend.freq6 = m_freqVal[ 6 ];
 }
 
 //void DummyToFreqs()
 //{
-//  m_freqs.freq0 = 256;
-//  m_freqs.freq1 = 333;
-//  m_freqs.freq2 = 444;
-//  m_freqs.freq3 = 111;
-//  m_freqs.freq4 = 666;
-//  m_freqs.freq5 = 567;
-//  m_freqs.freq6 = 321;
+//  m_freqsSend.freq0 = 256;
+//  m_freqsSend.freq1 = 333;
+//  m_freqsSend.freq2 = 444;
+//  m_freqsSend.freq3 = 111;
+//  m_freqsSend.freq4 = 666;
+//  m_freqsSend.freq5 = 567;
+//  m_freqsSend.freq6 = 321;
 //}
 
 void SendValues()
 {
     radio.stopListening();
     // Take the time, and send it.  This will block until complete
-    bool ok = radio.write( &m_freqs, sizeof( m_freqs ) );
+    bool ok = radio.write( &m_freqsSend, sizeof( m_freqsSend ) );
 
     if( c_debugRadio )
     {
