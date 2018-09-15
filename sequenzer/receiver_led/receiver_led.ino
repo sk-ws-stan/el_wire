@@ -199,14 +199,14 @@ void loop()
 
  // for( int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed = whiteLed + 1 )
   //{
-//    leds_one[ currentLed_one++ ] = CHSV( hue_one++, 255, 255 );
-//    leds_two[ currentLed_two++ ] = CHSV( hue_two++, 255, 255 );
-//    leds_three[ currentLed_three++ ] = CHSV( hue_three++, 255, 255 );
-//    leds_four[ currentLed_four++ ] = CHSV( hue_four++, 255, 255 );
-    leds_one[ currentLed_one++ ] = CRGB::White;
-    leds_two[ currentLed_two++ ] = CRGB::White;
-    leds_three[ currentLed_three++ ] = CRGB::White;
-    leds_four[ currentLed_four++ ] = CRGB::White;
+    leds_one[ currentLed_one++ ] = CHSV( hue_one++, 255, 255 );
+    leds_two[ currentLed_two++ ] = CHSV( hue_two++, 255, 255 );
+    leds_three[ currentLed_three++ ] = CHSV( hue_three++, 255, 255 );
+    leds_four[ currentLed_four++ ] = CHSV( hue_four++, 255, 255 );
+//    leds_one[ currentLed_one++ ] = CRGB::White;
+//    leds_two[ currentLed_two++ ] = CRGB::White;
+//    leds_three[ currentLed_three++ ] = CRGB::White;
+//    leds_four[ currentLed_four++ ] = CRGB::White;
 
    // FastLED.show();
     controllers[0]->showLeds(gBrightness);
@@ -251,9 +251,9 @@ void loop()
     
     delay(10);
       
-//    fadeall_one();
-//    fadeall_two();
-//    fadeall_three();
-//    fadeall_four();
+    fadeall_one();
+    fadeall_two();
+    fadeall_three();
+    fadeall_four();
   //}
 }
