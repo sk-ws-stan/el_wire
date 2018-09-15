@@ -17,12 +17,12 @@
 #define STROBE 4
 #define RESET 6
 #define DC_One A0
-#define DC_Two A1 
+#define DC_Two A1
 //button
 #define BUTTON 2
 
 // Set up nRF24L01 radio on SPI bus plus pins 8 & 9
-RF24 radio( 9, 10 );
+RF24 m_radio( 9, 10 );
 // Topology
 const boolean c_autoAck = false;
 // Radio pipe addresses for the 2 nodes to communicate.
@@ -34,7 +34,7 @@ LiquidCrystal_I2C lcd( 0x27, 2, 1, 0, 4, 5, 6, 7 );
 // debug flags
 const boolean c_potDebug = false;
 const boolean c_sequencerDebug = false;
-const boolean c_debugRadio = false;
+const boolean c_debugRadio = true;
 // serial boud rate: 57600 seems to work best
 const unsigned int c_boudRate = 57600U;
 // frequenzy bands used (<=7)
@@ -74,7 +74,7 @@ void setup()
   pinMode( BUTTON, INPUT );
   digitalWrite( STROBE, HIGH );
   digitalWrite( RESET, HIGH );
-  
+
   //Initialize Spectrum Analyzers
   digitalWrite( STROBE, LOW );
   delay( 1 );
@@ -91,20 +91,18 @@ void setup()
 
   printf_begin();
   // Setup and configure rf radio
-  radio.begin();
-  //radio.setDataRate(RF24_250KBPS);
-  //radio.enableDynamicPayloads();
-  radio.setAutoAck( c_autoAck );
-  // optionally, increase the delay between retries & # of retries
-  radio.setRetries( 15,15 );
+  m_radio.begin();
+  m_radio.enableDynamicPayloads();
+  m_radio.enableDynamicAck();
+  m_radio.setAutoAck( c_autoAck );
 
-  radio.openWritingPipe( c_pipes[0] );
-  radio.openReadingPipe( 1, c_pipes[1] );
+  m_radio.openWritingPipe( c_pipes[0] );
+  m_radio.openReadingPipe( 1, c_pipes[1] );
   // Start listening
-  radio.startListening();
+  m_radio.startListening();
   // Dump the configuration of the rf unit for debugging
-  radio.printDetails();
-  
+  m_radio.printDetails();
+
   lcd.setBacklightPin( 3, POSITIVE );
   lcd.setBacklight( LOW ); // NOTE: You can turn the backlight off by setting it to LOW instead of HIGH
   lcd.begin( 16, 2 );
@@ -113,7 +111,7 @@ void setup()
 
 void loop()
 {
-    delay(10);  
+    delay(10);
     //return 7 values of 7 bands pass filter
     ReadFrequencies();
     //Frequency(Hz):63  160  400  1K  2.5K  6.25K  16K
@@ -139,6 +137,7 @@ void loop()
     else
     {
         lcd.setBacklight( LOW );
+        lcd.clear();
     }
 }
 
@@ -209,9 +208,9 @@ void ArrayToFreqs()
 
 void SendValues()
 {
-    radio.stopListening();
+    m_radio.stopListening();
     // Take the time, and send it.  This will block until complete
-    bool ok = radio.write( &m_freqsSend, sizeof( m_freqsSend ) );
+    bool ok = m_radio.write( &m_freqsSend, sizeof( m_freqsSend ), true );
 
     if( c_debugRadio )
     {
@@ -224,7 +223,7 @@ void SendValues()
             printf("failed=========================.\n\r");
         }
     }
-    radio.startListening();
+    m_radio.startListening();
 }
 
 void ReadFrequencies()
@@ -233,10 +232,10 @@ void ReadFrequencies()
   for( int i = 0; i < c_frequencyBands; i++ )
   {
     Frequencies_One[ i ] = analogRead( DC_One );
-    Frequencies_Two[ i ] = analogRead( DC_Two ); 
+    Frequencies_Two[ i ] = analogRead( DC_Two );
     digitalWrite( STROBE, HIGH );
     digitalWrite( STROBE, LOW );
-    
+
     //for now take the higher channel
     if( Frequencies_Two[ i ] > Frequencies_One[ i ] )
     {
