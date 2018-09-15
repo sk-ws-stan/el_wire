@@ -20,7 +20,7 @@
 #define DATA_PIN_3 5
 #define DATA_PIN_4 6
 #define CLOCK_PIN 2
-#define NUM_STRIPS 3
+#define NUM_STRIPS 4
 
 CRGB m_ledsOne[ NUM_LEDS_1 ];
 CRGB m_ledsTwo[ NUM_LEDS_2 ];
@@ -64,7 +64,7 @@ void setup()
   m_controllers[0] = &FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( m_ledsOne, NUM_LEDS_1 );
   m_controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( m_ledsTwo, NUM_LEDS_2 );
   m_controllers[2] = &FastLED.addLeds< APA102, DATA_PIN_3, CLOCK_PIN, RGB >( m_ledsThree, NUM_LEDS_3 );
-  //m_controllers[3] = &FastLED.addLeds< APA102, DATA_PIN_4, CLOCK_PIN, RGB >( m_ledsFour, NUM_LEDS_4 );
+  m_controllers[3] = &FastLED.addLeds< APA102, DATA_PIN_4, CLOCK_PIN, RGB >( m_ledsFour, NUM_LEDS_4 );
   // init the baudrate
   Serial.begin( c_boudRate );
 
@@ -164,13 +164,13 @@ void loop()
     m_ledsOne[ m_currentLedOne++ ] = CHSV( hue_one++, 255, 255 );
     m_ledsTwo[ m_currentLedTwo++ ] = CHSV( hue_two++, 255, 255 );
     m_ledsThree[ m_currentLedThree++ ] = CHSV( hue_three++, 255, 255 );
-//  m_ledsFour[ m_currentLedFour++ ] = CHSV( hue_four++, 255, 255 );
+    m_ledsFour[ m_currentLedFour++ ] = CHSV( hue_four++, 255, 255 );
 
    // FastLED.show();
     m_controllers[0]->showLeds( m_gBrightness );
     m_controllers[1]->showLeds( m_gBrightness );
     m_controllers[2]->showLeds( m_gBrightness );
-  //  m_controllers[3]->showLeds( m_gBrightness );
+    m_controllers[3]->showLeds( m_gBrightness );
 
     if( hue_one >= 255 )
     {
@@ -209,6 +209,5 @@ void loop()
     fadeall_one();
     fadeall_two();
     fadeall_three();
-//    fadeall_four();
-  //}
+    fadeall_four();
 }
