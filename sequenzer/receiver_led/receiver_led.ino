@@ -20,30 +20,28 @@
 #define DATA_PIN_3 5
 #define DATA_PIN_4 6
 #define CLOCK_PIN 2
-#define NUM_STRIPS 4
+#define NUM_STRIPS 3
 
-CRGB leds_one[ NUM_LEDS_1 ];
-CRGB leds_two[ NUM_LEDS_2 ];
-CRGB leds_three[ NUM_LEDS_3 ];
-CRGB leds_four[ NUM_LEDS_4 ];
-CLEDController *controllers[ NUM_STRIPS ];
-uint8_t gBrightness = 128;
+CRGB m_ledsOne[ NUM_LEDS_1 ];
+CRGB m_ledsTwo[ NUM_LEDS_2 ];
+CRGB m_ledsThree[ NUM_LEDS_3 ];
+CRGB m_ledsFour[ NUM_LEDS_4 ];
+CLEDController *m_controllers[ NUM_STRIPS ];
+uint8_t m_gBrightness = 128;
 
-RF24 radio( 9, 10 );
+RF24 m_radio( 9, 10 );
 // Radio pipe addresses for the 2 nodes to communicate.
-const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+const uint64_t c_pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 
 const boolean c_radioDebug = true;
 const unsigned int c_boudRate = 57600U;
 // frequenzy bands used (<=7)
 const unsigned int c_frequencyBands = 7U;
-// noise gate value for frequency levels
-const unsigned int c_noiseGate = 100U;
-// divider for potentiometer read value
-int currentLed_one = 0;
-int currentLed_two = 0;
-int currentLed_three = 0;
-int currentLed_four = 0;
+
+int m_currentLedOne = 0;
+int m_currentLedTwo = 0;
+int m_currentLedThree = 0;
+int m_currentLedFour = 0;
 
 typedef struct
 {
@@ -63,37 +61,33 @@ void setup()
 {
   // sanity check delay - allows reprogramming if accidently blowing power w/leds
   delay(2000);
-  controllers[0] = &FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( leds_one, NUM_LEDS_1 );
-  controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( leds_two, NUM_LEDS_2 );
-  controllers[2] = &FastLED.addLeds< APA102, DATA_PIN_3, CLOCK_PIN, RGB >( leds_three, NUM_LEDS_3 );
-  controllers[3] = &FastLED.addLeds< APA102, DATA_PIN_4, CLOCK_PIN, RGB >( leds_four, NUM_LEDS_4 );
+  m_controllers[0] = &FastLED.addLeds< APA102, DATA_PIN_1, CLOCK_PIN, RGB >( m_ledsOne, NUM_LEDS_1 );
+  m_controllers[1] = &FastLED.addLeds< APA102, DATA_PIN_2, CLOCK_PIN, RGB >( m_ledsTwo, NUM_LEDS_2 );
+  m_controllers[2] = &FastLED.addLeds< APA102, DATA_PIN_3, CLOCK_PIN, RGB >( m_ledsThree, NUM_LEDS_3 );
+  //m_controllers[3] = &FastLED.addLeds< APA102, DATA_PIN_4, CLOCK_PIN, RGB >( m_ledsFour, NUM_LEDS_4 );
   // init the baudrate
   Serial.begin( c_boudRate );
 
   printf_begin();
   // Setup and configure rf radio
-  radio.begin();
-  // optionally, increase the delay between retries & # of retries
-  radio.setRetries(15,15);
-  // optionally, reduce the payload size.  seems to
-  // improve reliability
-  //radio.setPayloadSize(8);
+  m_radio.begin();
+  m_radio.enableDynamicPayloads();
+  m_radio.enableDynamicAck();
+  m_radio.setAutoAck( false );
   // Open reading pipes
-  radio.openWritingPipe( pipes[1] );
-  radio.openReadingPipe( 1, pipes[0] );
+  m_radio.openWritingPipe( c_pipes[1] );
+  m_radio.openReadingPipe( 1, c_pipes[0] );
   // Start listening
-  //radio.enableDynamicPayloads();
-  radio.setAutoAck( false );
-  radio.startListening();
+  m_radio.startListening();
   // Dump the configuration of the rf unit for debugging
-  radio.printDetails();
+  m_radio.printDetails();
 }
 
 void fadeall_one()
 {
   for( int i = 0; i < NUM_LEDS_1; i++ )
   {
-    leds_one[i].nscale8(250);
+    m_ledsOne[i].nscale8(250);
   }
 }
 
@@ -101,7 +95,7 @@ void fadeall_two()
 {
   for( int i = 0; i < NUM_LEDS_2; i++ )
   {
-    leds_two[i].nscale8(250);
+    m_ledsTwo[i].nscale8(250);
   }
 }
 
@@ -109,7 +103,7 @@ void fadeall_three()
 {
   for( int i = 0; i < NUM_LEDS_3; i++ )
   {
-    leds_three[i].nscale8(250);
+    m_ledsThree[i].nscale8(250);
   }
 }
 
@@ -117,38 +111,28 @@ void fadeall_four()
 {
   for( int i = 0; i < NUM_LEDS_4; i++ )
   {
-    leds_four[i].nscale8(250);
+    m_ledsFour[i].nscale8(250);
   }
 }
+
 void ReadRadio()
 {
-    if( radio.available() )
+    uint8_t pipe_num;
+
+    if( m_radio.available( &pipe_num ) && pipe_num == 1 )
     {
-      //int test = -3;
-      // Dump the payloads until we've gotten everything
-      bool done = false;
-      while( !done )
+      uint8_t len = m_radio.getDynamicPayloadSize();
+
+      if( len == sizeof( m_freqs ) )
       {
-        // Fetch the payload, and see if this was the last one.
-        done = radio.read( &m_freqs, sizeof(m_freqs) );
-        //done = radio.read( &test, sizeof(test) );
+        Serial.print( "matches" );Serial.println();
       }
-      radio.stopListening();
+      m_radio.read( &m_freqs, sizeof( m_freqs ) );
+
+      //radio.stopListening();
 
       if( c_radioDebug )
       {
-        Serial.print( "==========" );
-        if( done )
-        {
-          Serial.print( "ok" );
-        }
-        else
-        {
-          Serial.print( "meeeehh" );
-        }
-        Serial.print( "==========" );
-        Serial.println();
-
         Serial.print( m_freqs.freq0 ); Serial.print( " " );
         Serial.print( m_freqs.freq1 ); Serial.print( " " );
         Serial.print( m_freqs.freq2 ); Serial.print( " " );
@@ -157,16 +141,10 @@ void ReadRadio()
         Serial.print( m_freqs.freq5 ); Serial.print( " " );
         Serial.print( m_freqs.freq6 ); Serial.print( " " );
 
-        //Serial.print( test );
         Serial.println();
       }
     }
-    else
-    {
-        Serial.print( "meeeehh" );
-    }
-
-    radio.startListening();
+    //radio.startListening();
 }
 
 void loop()
@@ -183,23 +161,17 @@ void loop()
   static uint8_t hue_three = 128;
   static uint8_t hue_four = 192;
 
- // for( int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed = whiteLed + 1 )
-  //{
-    leds_one[ currentLed_one++ ] = CHSV( hue_one++, 255, 255 );
-    leds_two[ currentLed_two++ ] = CHSV( hue_two++, 255, 255 );
-    leds_three[ currentLed_three++ ] = CHSV( hue_three++, 255, 255 );
-    leds_four[ currentLed_four++ ] = CHSV( hue_four++, 255, 255 );
-//    leds_one[ currentLed_one++ ] = CRGB::White;
-//    leds_two[ currentLed_two++ ] = CRGB::White;
-//    leds_three[ currentLed_three++ ] = CRGB::White;
-//    leds_four[ currentLed_four++ ] = CRGB::White;
+    m_ledsOne[ m_currentLedOne++ ] = CHSV( hue_one++, 255, 255 );
+    m_ledsTwo[ m_currentLedTwo++ ] = CHSV( hue_two++, 255, 255 );
+    m_ledsThree[ m_currentLedThree++ ] = CHSV( hue_three++, 255, 255 );
+//  m_ledsFour[ m_currentLedFour++ ] = CHSV( hue_four++, 255, 255 );
 
    // FastLED.show();
-    controllers[0]->showLeds(gBrightness);
-    controllers[1]->showLeds(gBrightness);
-    controllers[2]->showLeds(gBrightness);
-    controllers[3]->showLeds(gBrightness);
-    
+    m_controllers[0]->showLeds( m_gBrightness );
+    m_controllers[1]->showLeds( m_gBrightness );
+    m_controllers[2]->showLeds( m_gBrightness );
+  //  m_controllers[3]->showLeds( m_gBrightness );
+
     if( hue_one >= 255 )
     {
       hue_one = 0;
@@ -216,30 +188,27 @@ void loop()
     {
       hue_four = 0;
     }
-    //currentLed;
-    
-    if( currentLed_one >= NUM_LEDS_1 )
+
+    if( m_currentLedOne >= NUM_LEDS_1 )
     {
-      currentLed_one = 0;
+      m_currentLedOne = 0;
     }
-    if( currentLed_two >= NUM_LEDS_2 )
+    if( m_currentLedTwo >= NUM_LEDS_2 )
     {
-      currentLed_two = 0;
+      m_currentLedTwo = 0;
     }
-    if( currentLed_three >= NUM_LEDS_3 )
+    if( m_currentLedThree >= NUM_LEDS_3 )
     {
-      currentLed_three = 0;
+      m_currentLedThree = 0;
     }
-    if( currentLed_four >= NUM_LEDS_4 )
+    if( m_currentLedFour >= NUM_LEDS_4 )
     {
-      currentLed_four = 0;
+      m_currentLedFour = 0;
     }
-    
-    delay(10);
-      
+
     fadeall_one();
     fadeall_two();
     fadeall_three();
-    fadeall_four();
+//    fadeall_four();
   //}
 }
